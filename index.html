@@ -3,83 +3,293 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3 Demo Video - Links</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <title>DemoData</title>
     <style>
-        :root { --primary: #e50914; --bg: #0f0f0f; --card: #1e1e1e; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: white; margin: 0; padding: 0; }
-        header { background: rgba(0,0,0,0.9); padding: 20px; text-align: center; border-bottom: 2px solid var(--primary); position: sticky; top: 0; z-index: 100; }
-        .container { max-width: 900px; margin: 20px auto; padding: 0 15px; }
-        .video-card { background: var(--card); border-radius: 12px; overflow: hidden; margin-bottom: 40px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); border: 2px solid #ffffff; transition: 0.3s; }
-        .video-card:hover { transform: translateY(-5px); }
-        .video-header { padding: 15px; font-weight: bold; color: var(--primary); background: #282828; display: flex; justify-content: space-between; align-items: center; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: #0f172a; padding: 20px; color: white; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .header { text-align: center; padding: 40px 20px; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 15px; margin-bottom: 30px; border: 1px solid #334155; }
+        #linksList { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+        .video-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; text-align: center; transition: all 0.3s ease; position: relative; }
+        .video-card:hover { transform: translateY(-5px); border-color: #38bdf8; }
+        .play-area { cursor: pointer; margin-bottom: 15px; }
+        .play-icon { width: 50px; height: 50px; background: #38bdf8; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 20px; color: #0f172a; }
+        .video-title { font-size: 16px; font-weight: 600; color: #f1f5f9; margin-bottom: 15px; }
+        .download-btn { background: #22c55e; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .download-btn:hover { background: #16a34a; }
         
-        /* Thumbnail Container */
-        .thumbnail-container { position: relative; width: 100%; display: block; text-decoration: none; cursor: pointer; }
-        .thumbnail-img { width: 100%; display: block; transition: 0.3s; }
-        
-        /* Play Icon Overlay (Still visible for look and feel) */
-        .play-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); transition: 0.3s; }
-        .thumbnail-container:hover .play-overlay { background: rgba(0,0,0,0.1); }
-        .play-icon { width: 70px; height: 70px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(229, 9, 20, 0.5); }
-        .play-icon::after { content: ''; box-sizing: border-box; width: 0; height: 0; border-style: solid; border-width: 15px 0 15px 25px; border-color: transparent transparent transparent white; margin-left: 5px; }
-        
-        .download-footer { padding: 12px; text-align: center; background: #222; }
-        .btn-download { display: inline-block; background: #27ae60; color: white; padding: 8px 25px; border-radius: 5px; text-decoration: none; font-weight: bold; transition: 0.3s; }
-        .btn-download:hover { background: #219150; transform: scale(1.05); }
+        /* Ad Modal */
+        #adModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 3000; }
+        #adFrame { width: 100%; height: 100%; border: none; }
+        #timerOverlay { position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 50px; font-weight: bold; z-index: 3001; }
 
-        .pagination { display: flex; justify-content: center; gap: 15px; padding: 20px; }
-        .btn { background: var(--primary); color: white; border: none; padding: 10px 25px; border-radius: 20px; cursor: pointer; font-weight: bold; }
+        /* Video Player Overlay (Smart Design) */
+        #videoModal { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0, 0, 0, 0.9); 
+            z-index: 2000; 
+            justify-content: center; 
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        
+        .player-wrapper {
+            position: relative;
+            width: 95%; /* Mobile friendly width */
+            max-width: 900px; /* PC friendly max-width */
+            height: auto;
+            max-height: 85vh; /* Prevents overflow */
+            background: #000;
+            border-radius: 12px;
+            box-shadow: 0 0 30px rgba(56, 189, 248, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        #mainPlayer, #embedPlayer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: -50px;
+            right: 0;
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        /* Spinner (Loader) */
+        .loader {
+            border: 5px solid #334155;
+            border-top: 5px solid #38bdf8;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            display: none;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Handle Portrait Videos (Smart detection) */
+        .player-wrapper.portrait {
+            max-width: 450px;
+        }
+        .player-wrapper.portrait .video-container {
+            padding-top: 177%; /* 9:16 Aspect Ratio */
+        }
     </style>
 </head>
 <body>
 
-    <header><h1>3 Demo Video</h1></header>
-    
-    <div class="container">
-        <div id="video-content">
-            
-            <div class="video-card">
-                <div class="video-header">Pakistani Vilage School Teacher</div>
-                <a href="https://u.pcloud.link/publink/show?code=XZ3YPd5ZpSXoT3g7RE0AU9Y0jlIU4XMo8DLy" target="_blank" class="thumbnail-container">
-                    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg9SmECfnEKGfhhWvzs4dHdSH-M-sFQV7R0JcNiWvdgoHLEH4HCofidbkzedI3HhPAmRcwDKN0w4zMMBJoe-_dBnzZWL8aakBhH6FwWhVb_yanIrVT7dXzigSgHNAze9rCE0kQCkpAeY6DPx2uPWKSHbrOOzT_PqdQgVhMTUxZbP9qT4IBk7TrS03WdDV0/s16000/31812.jpg" alt="Thumbnail" class="thumbnail-img">
-                    <div class="play-overlay">
-                        <div class="play-icon"></div>
-                    </div>
-                </a>
-                <div class="download-footer">
-                    <a href="https://u.pcloud.link/publink/show?code=XZ3YPd5ZpSXoT3g7RE0AU9Y0jlIU4XMo8DLy" target="_blank" class="btn-download">Download Now</a>
-                </div>
-            </div>
+<div class="container">
+    <div class="header">
+        <h1>Boy Demo Videos</h1>
+        <p>ڈیمو دیکھنے کے بعد اور ویڈیو کیلیے رابطہ کریں!</p>
+    </div>
+    <div id="linksList"></div>
+</div>
 
-            <div class="video-card">
-                <div class="video-header">Pakistani Tiktoker Girl Friend Super Short Video</div>
-                <a href="https://u.pcloud.link/publink/show?code=XZSuPd5Z59CVW7IwaARQtlXGXsFPAmtnHGdk" target="_blank" class="thumbnail-container">
-                    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh5FGqIPcH9h9epW2MEkLOwzXPKkTlV2N3136-Vx6Bvd-8XCet7fuCq9Y-SGYnEDBSU1QgwrNaGFnuuibTTMyLwNuV6wRdzXcCFeZ49fFJS2NCrdGPWng0BTuFUa1PeOc6l5jhbeQ_bZCrrYRPKYO7bcf_8Pfa-DAii1oLM3u-_9fWON4lT1CdXEvL19CA/s16000/31818.jpg" alt="Thumbnail" class="thumbnail-img">
-                    <div class="play-overlay">
-                        <div class="play-icon"></div>
-                    </div>
-                </a>
-                <div class="download-footer">
-                    <a href="https://u.pcloud.link/publink/show?code=XZSuPd5Z59CVW7IwaARQtlXGXsFPAmtnHGdk" target="_blank" class="btn-download">Download Now</a>
-                </div>
-            </div>
-            
-            <div class="video-card">
-            <div class="video-header">Instagram Couple Viral Video</div>
-            <a href="https://u.pcloud.link/publink/show?code=XZtfPd5ZrUo8iUVxl5u9mWyMrPS4JRQgLsmV" target="_blank" class="thumbnail-container">
-            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiUTkpNndmCItVd1g9h-uwhSsTnBUgxWzTCFstccHSYUtjLkC5dtt7QujrXcd3tZd86uAuoe1xOZd9sb0VT0iVduDyUVh8j97rguHWT_HDOUpunpTi8Rq0ixShKahESPHSapcLwEskKaJrAsqClG6yW2f8BaU7RVJ9xKMe-tFNW6-LhiMx1Ik8U63_198U/s16000/31821.jpg" alt="Thumbnail" class="thumbnail-img">
-            <div class="play-overlay">
-            <div class="play-icon"></div>
-            </div>
-            </a>
-            <div class="download-footer">
-            <a href="https://u.pcloud.link/publink/show?code=XZtfPd5ZrUo8iUVxl5u9mWyMrPS4JRQgLsmV" target="_blank" class="btn-download">Download Now</a>
-            </div>
-            </div>
-
+<!-- Video Player Modal -->
+<div id="videoModal">
+    <div class="player-wrapper" id="pWrapper">
+        <button class="close-btn" onclick="closePlayer()">CLOSE ✕</button>
+        <div class="video-container">
+            <div class="loader" id="videoLoader"></div>
+            <video id="mainPlayer" controls controlsList="nodownload"></video>
+            <iframe id="embedPlayer" allowfullscreen></iframe>
         </div>
     </div>
+</div>
 
-</body>
-</html>
+<div id="adModal">
+    <div id="timerOverlay">Please wait: <span id="seconds">15</span>s</div>
+    <iframe id="adFrame" src=""></iframe>
+</div>
+
+<script>
+const videoLinks = [
+    "https://mega.nz/embed/sudTUALC#eH5LbN9Yu7ZVph-ZhGK0OIOwEj__bK1XSIp-e6pjoDA",
+"https://mega.nz/embed/Zv9BGZRK#IGFX8PTAri45BYiK1ZK9HOA5-OkftVaZLDGSIeCV690",
+"https://mega.nz/embed/4iMTBB4Y#RFIhTNp4y4wg1Kn44dEeEoAGNCrgP4b4ROg80PlAxPI",
+"https://mega.nz/embed/Y7sgRLqT#rWchlmclZPkSp3vajfeUFNeHXxxp9GXYGBTlHr7Wqbo",
+"https://mega.nz/embed/I79CjT4I#g9PY3e-Z_9nDeR8jPVpPbFPfIrHm1Mv-cAXWogB_7fs",
+"https://mega.nz/embed/J3Uwwb7C#z-ako6ut5edKlxC7bBHAND6t-1Awz3VYX5KxfhGtCOM",
+"https://mega.nz/embed/l282SYSA#y_xFk21T-F10p-HGhTFfeyQ51jAonKMzOU55UzZT6LA",
+"https://mega.nz/embed/prUG1Iaa#wQFuQii7WawfWGbGEMg0MH83LcadbSsZ5Tupzo5_rmg",
+"https://mega.nz/embed/FvFCCRYK#xBB2jxfP7x1mrGVstCehA5MBw_QoJ9d4-0f-2v97Plw",
+"https://mega.nz/embed/B6FmTS7L#jjJV1EVZLm3USQO48L818KMSugwU2GSsBvbz3qcijg4",
+"https://mega.nz/embed/NqsABIRY#o8zBBYfyZFIxQkl2YeutBiNfFsZQuPRJkzLBl11xEzo",
+"https://mega.nz/embed/161l2QyY#LEPmhr8HcNiFyJeLjOfWXwFiIQrjrZzI6jtlMXrEJmA",
+"https://mega.nz/embed/Jq92XCDL#mxgrMePVA07PjsntZAW-R0FN1CWXDKIKHy6f9lwN5-s",
+"https://mega.nz/embed/V3cDzb5R#LbCX8Pw8iUmqZwF9IUiD8bIstNF5Pb2NCIvuOz74Fuo",
+"https://mega.nz/embed/M69XnTJa#BO1k2z67S8IjRl5hX80ouS_Bk-ApgTMI6T-YnQePpmM",
+"https://mega.nz/embed/N7dTGAqI#7JcpCAMWRUCHk8fN9AtYYPDU14eabVE65juNYx0TNiU",
+"https://mega.nz/embed/9nEAQDQD#BsS_hiy-MXu6nnvLGltF2QXwaLpYF-oOFE4CSCEEUgk",
+"https://mega.nz/embed/M2dUVTAY#L5BIV9BuRRe-h1gqpXWox6h59qN0WBt1kYbjeW1DR8I",
+"https://mega.nz/embed/dyMBWTqA#qz891vvC_z0h_610DNfFLVzFUA9rjZzMRdMsxp40Nlg",
+"https://mega.nz/embed/B7kRGb6A#Mw1jfCsIAiLaL_doj0O9OJ1JlSq9MMJBC88ruDRp5a4",
+"https://mega.nz/embed/g6NggaSZ#kkLrNJEBaL47Sh-b0wDW1nPr8oj_wyrgDvuQXCElZyA",
+"https://mega.nz/embed/h3di3ZDR#Pfj1q3k8OzfqqjCyeQ7TLDqDf8KzrH362zzDUBosxjY",
+"https://mega.nz/embed/Yr8Q2RrD#tCOfYnkeWlF_NtYcMiPOrKi7r-W9YsdpHepQCu7SMns",
+"https://mega.nz/embed/Zjc0VJSB#7pFuOemJSL3PGKj_rVoaxABruq0woDvBfk-EjbHTImk",
+"https://mega.nz/embed/UjU3RSCS#o5Kiz8Bj5nd_bZAt9tcaa1uc0h_o3Bx7Fs-zdFGTh5c",
+"https://mega.nz/embed/hncghQxT#-m_urcSXkDukS8xP34XG_DxkgRM9G84YiDVtZJUd3zo",
+"https://mega.nz/embed/o3cBSLQI#gEdPF9_ClVm-yKWtOaRnS4AEVxe7BFeNE7P9Hn8PwDM",
+"https://mega.nz/embed/NqFV2SgR#VkV-uPOmkk8wy44-GjBolA2WQfnnJmcFDjMB5mhQbhw",
+"https://mega.nz/embed/421B2Kra#EkC2u4YztRrdNzS3W_sW_Vsllvw47lmfr9SU4oKxOm4",
+"https://mega.nz/embed/5z0UkBKR#aO0p8FI109oNQEfja0HetgbFqm6F36E8H0t1396Ak4A",
+"https://mega.nz/embed/0nlBTKDY#DVFtG0sicOeOGDocoEgphKBSlA59i8nd_zAIA1_AYqI",
+"https://mega.nz/embed/cmd0DIAJ#gfcaRI6DI-uABO7I8Mf8Dt4i5s2eAGbva7vPoocoacU",
+"https://mega.nz/embed/AjUTTKCb#T5QofIviKKuInqnTpeDNjd3t7eadTqnC9aFaVRe1SRA",
+"https://mega.nz/embed/1mEAzA6Z#KbwcVLuzoiO8BTp2y0oprNis7mlX7k2A3kdPemHfA2M",
+"https://mega.nz/embed/Z31yxR4T#Qp8gHbJxMNCFTJyORGpkCde-b1KufzsU9MO5Iu4Jb00",
+"https://mega.nz/embed/5yNiQKTT#SQSnhYDvzftp1ZtqZJv1Z3chBt8lUritntAhSip-urY",
+"https://mega.nz/embed/MzUBRLCC#v_jvoJd6BlAETYCIFSgOs1Uk9apP2pmDUzjXZvxysSs",
+"https://mega.nz/embed/I2UyGSIB#n4vNf2v6jRDCDEX8t0Zup4tJoWaOtJ7uUYrAZpso4Y8",
+"https://mega.nz/embed/t28iUbQa#5s-VNv1kvo2hW3sElecEHITZLYkrCALkTKiE-l3gOww",
+"https://mega.nz/embed/ZqcQAL7I#ACQUllXL07coiEgDHBYkF3Gr5XOkaDkdDmPan9xeyi8",
+"https://mega.nz/embed/o6tHTBgA#TsAFynaPc9g6KA6di0RPeOvkg-gunIYX3RcNsx26QQY",
+"https://mega.nz/embed/1ucS0ZID#jL8Itc1D0hq5DEqhz8AqMS6eYrqFIRKB4yhSIdoN4hs",
+"https://mega.nz/embed/ZqEmgDiT#asHi8QzMLord64ObBU4hMG5AHqD3RGSH-0aeP5kHPqM",
+"https://mega.nz/embed/JiNj2QCJ#5zFg4mVo25rXA_rgXX-QAnGUrxecUUuztsK1K8c9fTI",
+"https://mega.nz/embed/h3FSnDQY#j57T5V8wnJ2nHYvDFWaVQfke_HMkhUWv_J45Ne70th8",
+"https://mega.nz/embed/pr8FhQJL#76jFLlxAc0zS4biaY5bu3FJXHqgh2hI7wAY_nl66E4k",
+"https://mega.nz/embed/IzMDGDjI#MH1tWiek81ibVs58OQVX8cSWCA5eTEIL4PIUaS5bhvk",
+"https://mega.nz/embed/FrtCERjZ#1175mUwZhJGsOAw6cfilabEuASOxtU8LHBM5qngxnC0",
+"https://mega.nz/embed/47VCxbzB#IOGnvoG2rnKHHwOpjXQ_fEK7ZgxAIH0rfjxrkMHRxCk",
+"https://mega.nz/embed/p3VFWCQS#9_B-0rE6sQbd3xuHwrWQUPrOZ7WkmKNCD7NYltSqCIs",
+"https://mega.nz/embed/QiU0mSRT#0hTv1tlQBsM4d3lmGegHNRxQW9P1f5x5KSP50OLwrRk",
+"https://mega.nz/embed/c711BJAa#GSgJOKqzWqYdhhgVVQ7L_kAG-Kv-IIgiGcJTvxmNv9A",
+"https://mega.nz/embed/tj9RBIrQ#ikAN4hQr0leE_x3bWRACkWmdZKVdc2_oViX6YkSBAXo",
+"https://mega.nz/embed/U29EDQAR#ODTj5YQ6nSALTud0E9gjYCrNa2YWOyHBeAhwuEEFPpE",
+"https://mega.nz/embed/ci1BiJ4A#87erfuwrVQhQ7UQZfCHqulXaCIP223vNHzkZE1Q9S0c",
+"https://mega.nz/embed/5yEmhITI#6-ITIIDDpU--ep25SckDNdkaE40f4AG2xF0ZPyonANk",
+"https://mega.nz/embed/k2NDAKKR#FTF_RGMgD5Rc6C6A8unPZYeTQme0GvWpMOTHKToG-Vk",
+"https://mega.nz/embed/QvtDRbiY#VpY2A-YqO7kHu_t-V4j0P25J6Q4CfvojDnfZ2Iaucn0",
+"https://mega.nz/embed/piElzLIJ#QZ8LxhdbEs3uiPRtTRt2bm12PcTBCuKOsvacLTbQE4E",
+"https://mega.nz/embed/53kU2T5a#Hc7pFssr1AZpzUM8VxNN2s9l6KzFh09yfQI1vnTIdTM",
+"https://mega.nz/embed/ciNTHRYZ#0acUM_axJnWbU5ZzNcydj5oX0VWBuuopEiq9_nSg_90",
+"https://mega.nz/embed/Z6MmSQAZ#E9NK66sXUX_RoGCfL6BQ5FuqHw1YP2P8O8GJFALPRP4",
+"https://mega.nz/embed/ZzlHQYBT#VaJE3ZdixQtSbYlTHzPsvMr6R9aYHry9shhJCy2VC_k",
+"https://mega.nz/embed/EuthzJKB#qK-VmujtBIMfDyY1qcCC_A4S7yQLgqFGT22EizgziXc",
+"https://mega.nz/embed/pzsxTAxS#M-jTaLG7HR1mEmS_Z_Hed1Xbng5dr5A4QD4Z30nrf6s",
+"https://mega.nz/embed/57lABaQB#yZvUOv9rpgD5QVmDhiDxmPcVJogftHwucY45Iu4kM2g",
+"https://mega.nz/embed/1rdEUIiK#ht6V-N1SMZuMO2dxhP0Upx3ScbQLdL5h4FCuGlbHwPU",
+"https://mega.nz/embed/5qdBwIrJ#extR7Qxyp8uFsQtjoYgyLheWLw3lPcJgCvSZSDspdo4",
+"https://mega.nz/embed/Ju10HD6Y#0NopF-LVK6G4ndC7230dGvqej0JDIG99zKSNVi0qLro",
+"https://mega.nz/embed/N6NURQZA#ou_dSB_YqWWnrMOEJFRZrbFy0b5cDL0-ss1Ymn6H6aM",
+"https://mega.nz/embed/kmtxhBZT#z4Oj07zHSkyC-taLGWODJC31Ws3N70-ZSh-8yCI3xMk",
+"https://mega.nz/embed/k6sSmILZ#6mY87SK9UuvmRZ7JfgGu-NHjP7DqERaVBIbZKejpiy8",
+"https://mega.nz/embed/Y7FUQKwb#ROILJVo3-zysd_wKCn9GJUtBoYBYxxbidX0aW3xsWus",
+"https://mega.nz/embed/F7EjxCjb#kofDMRDWTCOPNvTzTOzap2sKEoOewycKhI8utXGwdaU",
+"https://mega.nz/embed/FjFVWLgZ#3u4w5Pn2soyirRxQ_awplG9C7byZNz7NQ2HARtBS-bM",
+"https://mega.nz/embed/kvlXHZwR#k4je9CghkPhGJHUX_4fGUZYuVMgRYY1R7fZE58t2LxY",
+"https://mega.nz/embed/J3dkFITQ#f7j1jJQdJ2Z631LqqXEU8GoF5WmMq1AM7R1sQBgWPag",
+"https://mega.nz/embed/ZuEFHRwT#euKPTpC4NSzL-fwBaDAHnLnf7aIlo3G9C6cFAQhe0Pw",
+"https://mega.nz/embed/U6V1BJpQ#Ot6PzBxDjb4Nd7uX0Mgn4T6dCHIGJoONE2779dTlBg8",
+"https://mega.nz/embed/h6NijBrA#oNjC-bfZ3N4nxwu_iWn4hOgkt9yXfkZLYJllLhFyIqU",
+"https://mega.nz/embed/FvEAnLZR#Uct8A47B0OL-nv7WxOnhN5y8JMJAteKH8oVhfVe8FsI",
+"https://mega.nz/embed/h2EznIpB#sDPBuby6-oJnf5e-4wbPghNQDb4jGZwVKcv396vB6us",
+"https://mega.nz/embed/E7swSLrD#TJ791hbxi9lPKiFcdZcOW3OevFYUHl2fINYGTiUFA1M",
+"https://mega.nz/embed/km91HLTZ#m48fMhChhS0RdH6x3FDxof8-PhpnKhopMdl52dDD5es",
+"https://mega.nz/embed/0i9mQCzA#nNzQS7ViY2DLFX4EXAbwZzQJ8J18ZFuWouIpgxoa43Y",
+"https://mega.nz/embed/gv1QlR5R#EhkDWiRaezKLt4AEO4pXsmo-mFleRh0UFGmp0AbpRpQ",
+"https://mega.nz/embed/Vv0A0BTK#HSB-VfVFcqhBxUWl_6XxQgK1muLzpyT-mtFFz6jn6II",
+"https://mega.nz/embed/83VkWYoS#NZh6KaYK-3Xj0A0cX-Q8aiZnPI2WEY45BCMeLsi7g_U",
+"https://mega.nz/embed/569UFBbT#Lh65Xx_794iZfXPkiR1AsOSbx0X1uxTVz8Zc4CLoXLI",
+"https://mega.nz/embed/c3sGXKjS#s8hcdkPMtQiSLqtJ0Ozoixh_dq-20i8Sls_s1NbYnvQ",
+"https://mega.nz/embed/9ylhRBSR#dONsywa6jsa8q98K0ajC2m7dXf9SiqqCXWBwWrBHxIg",
+"https://mega.nz/embed/o3djHCAK#ChLnpxZH7wbhdqxaQp7LQjeFBxNW5L-Tk6Xu_IuPAv4",
+"https://mega.nz/embed/p7d2xAQT#avWW6lj8qXDnsbKY6Sz0Sd7uEx4vtqa2nn-kELx6WLw",
+"https://mega.nz/embed/Qm90jTZb#xOfOUofxvmeyUQzAF1dyYVdOzVY3aFJxgExoWbNRAag",
+"https://mega.nz/embed/h30lVYgD#gWA1bOAhY0M3_BDvWbdzYWoDKiJ78BLt4Xx8oRXmlGc",
+"https://mega.nz/embed/J20g1LrR#_KhiUOC-hj-o07wjhpPE4LjN-lj641KtSXL-mbFEpXk",
+"https://mega.nz/embed/N2cG3JpK#WxffYJ0r18KwBLqD8K2KQM7VlYAJT5kGn7Mw8LpMunc",
+"https://mega.nz/embed/x71jQJDS#6TMJTKz7jpnuAjTMN5rXmJkh14nAMTUWgxYahuB9UUc",
+"https://mega.nz/embed/kqtjDZTZ#7RM4kWkvLhcIy4TduatKplUL_kMa8fT193dBmtlXY0c",
+"https://mega.nz/embed/0v9l1C6R#Ssc-QAerQpsKRrWvk-41R8qEkgpzIyqtGUb9tFEregY",
+"https://mega.nz/embed/InlwWJIK#omdQxqC94HG19QS3v47O7sicJQRy-COcHTekewa-yQg",
+"https://mega.nz/embed/87NxSZLD#VbcZnha9xTbc7Dte1U_4rKfmyQ8O8bh258lOUQmKB7Y",
+"https://mega.nz/embed/x7dRXbaL#O4audvXmrluyWGGxhew3B_o1ohrlrby3oilKJkDJ8YA",
+"https://mega.nz/embed/tyFAnBCQ#5wY0GW5PYWtHZqOawx-y1ysf3EWgrM4mIE3MHVBg1Ks",
+"https://mega.nz/embed/Nu1CzLIK#MiiaxkyqdNfaVvdJ4DBMjOaPKCY-VwKQQl-UA4IZcLI",
+"https://mega.nz/file/grMRGS6L#4FDLWDcNVgGXG8SlPhCKJmzlKsH-0y9xRJ_uo0kez8w",   
+];
+
+const adLinks = [
+    "https://www.effectivegatecpm.com/fgjvc6xp?key=02a55463acca337410ce3bf28d4c13fa",
+    "https://www.effectivegatecpm.com/etnvcsg5?key=8cdf22590b8d8a5148ae31d2551bbe25",
+    "https://www.effectivegatecpm.com/ynw0tz2k3x?key=d610eba80f701ad43ddbbefa958a170b"
+];
+
+let playCount = 0;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('linksList');
+    videoLinks.forEach((url, index) => {
+        const card = document.createElement('div');
+        card.className = 'video-card';
+        card.innerHTML = `
+            <div class="play-area" onclick="handlePlay('${url}')">
+                <div class="play-icon">▶</div>
+                <div class="video-title">Video ${index + 1}</div>
+            </div>
+            <button class="download-btn" onclick="startDownloadProcess('${url}')">
+                📥 Download Now
+            </button>
+        `;
+        container.appendChild(card);
+    });
+    setInterval(showRandomAd, 180000);
+});
+
+// جب ایپ بیک گراؤنڈ میں جائے تو ویڈیو بند کر دیں
+document.addEventListener("visibilitychange", function() {
+    if (document.hidden) closePlayer();
+});
+
+function handlePlay(url) {
+    playCount++;
+    if (playCount % 7 === 0) {
+        startAdOnly(() => playVideo(url));
+    } else {
+        playVideo(url);
+    }
+}
+
+function playVideo(url) {
+    const modal = document.getElementById('videoModal');
+    const player = document.getElementById('mainPlayer');
+    const embedPlayer = document.getElementById('embedPlayer');
