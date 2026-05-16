@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DemoData</title>
+    <title>Demo Boy Video</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
         body { background-color: #0f172a; padding: 20px; color: white; }
@@ -116,7 +116,8 @@
 <div class="container">
     <div class="header">
         <h1>Boy Demo Videos</h1>
-        <p>ڈیمو دیکھنے کے بعد اور ویڈیو کیلیے رابطہ کریں!</p>
+        <p>
+ڈیمو دیکھنے کے بعد اور ویڈیو کیلیے رابطہ کریں!</p>
     </div>
     <div id="linksList"></div>
 </div>
@@ -140,7 +141,7 @@
 
 <script>
 const videoLinks = [
- "https://mega.nz/embed/MzlkQZ7T#Y44p6Z5RwQ7FfLr5gRSyop4r4Qh2xs5T26RBGhRmHaI",
+"https://mega.nz/embed/MzlkQZ7T#Y44p6Z5RwQ7FfLr5gRSyop4r4Qh2xs5T26RBGhRmHaI",
 "https://mega.nz/embed/I2MzAZQB#WFmuYU-XleTdHiP1fZL_Lj5SGrEQmNa2nMetGqayWPI",
 "https://mega.nz/embed/RjtxQQZQ#77DWsl_S9WnveyTCZx1-XLkMhysOk3XiSkfk9Eu846U",
 "https://mega.nz/embed/Av8UzDpY#6K7kc-U11-lh3ZIOrcy9dHaUJdHBW6Mrid_hTQupOqk",
@@ -194,3 +195,82 @@ function playVideo(url) {
     const modal = document.getElementById('videoModal');
     const player = document.getElementById('mainPlayer');
     const embedPlayer = document.getElementById('embedPlayer');
+    const loader = document.getElementById('videoLoader');
+    const wrapper = document.getElementById('pWrapper');
+
+    modal.style.display = 'flex';
+    loader.style.display = 'block';
+    player.style.display = 'none';
+    embedPlayer.style.display = 'none';
+    wrapper.classList.remove('portrait'); // Reset
+
+    if (url.includes("mega.nz/embed") || url.includes("iframe")) {
+        embedPlayer.style.display = 'block';
+        embedPlayer.src = url;
+        embedPlayer.onload = () => { loader.style.display = 'none'; };
+    } else {
+        player.style.display = 'block';
+        player.src = url;
+        player.onloadedmetadata = function() {
+            // اگر ویڈیو لمبی (Portrait) ہے تو پلیئر کو ایڈجسٹ کریں
+            if (this.videoHeight > this.videoWidth) {
+                wrapper.classList.add('portrait');
+            }
+        };
+        player.oncanplay = () => {
+            loader.style.display = 'none';
+            player.play();
+        };
+    }
+}
+
+function closePlayer() {
+    const modal = document.getElementById('videoModal');
+    const player = document.getElementById('mainPlayer');
+    const embedPlayer = document.getElementById('embedPlayer');
+    modal.style.display = 'none';
+    player.pause();
+    player.src = "";
+    embedPlayer.src = "";
+}
+
+function startAdOnly(callback) {
+    const adModal = document.getElementById('adModal');
+    const adFrame = document.getElementById('adFrame');
+    const secondsSpan = document.getElementById('seconds');
+    const randomAd = adLinks[Math.floor(Math.random() * adLinks.length)];
+    adFrame.src = randomAd;
+    adModal.style.display = 'block';
+    let timeLeft = 1;
+    secondsSpan.innerText = timeLeft;
+
+    const timer = setInterval(() => {
+        timeLeft--;
+        secondsSpan.innerText = (timeLeft < 0) ? 0 : timeLeft;
+        if (timeLeft <= 0) {
+            clearInterval(timer);
+            adModal.style.display = 'none';
+            adFrame.src = "";
+            if(callback) callback();
+        }
+    }, 1000);
+}
+
+function startDownloadProcess(videoUrl) {
+    startAdOnly(() => triggerDownload(videoUrl));
+}
+
+function showRandomAd() {
+    startAdOnly();
+}
+
+function triggerDownload(url) {
+    let downloadUrl = url;
+    if (url.includes("mega.nz/embed")) {
+        downloadUrl = url.replace("mega.nz/embed", "mega.nz/file");
+    }
+    window.open(downloadUrl, '_blank');
+}
+</script>
+</body>
+</html>
